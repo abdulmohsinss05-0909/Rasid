@@ -1,0 +1,111 @@
+<div class="r-page">
+  <header class="r-page-header">
+    <div>
+      <h1>Monitoring topics</h1>
+      <p>Each topic tracks public posts on X matching its keywords, hashtags and accounts.</p>
+    </div>
+    @if (auth.canManageTopics()) {
+      <div class="r-actions">
+        <a matButton="filled" routerLink="/topics/new">
+          <span class="material-symbols-rounded btn-icon">add</span> New topic
+        </a>
+      </div>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="r-grid r-grid--cards">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="r-skeleton skeleton-card"></div>
+      }
+    </div>
+  } @else if (error(); as message) {
+    <div class="r-card r-state">
+      <span class="material-symbols-rounded">cloud_off</span>
+      <h2>Topics could not be loaded</h2>
+      <p>{{ message }}</p>
+      <button matButton="outlined" (click)="load()">Try again</button>
+    </div>
+  } @else if (topics().length === 0) {
+    <div class="r-card r-state">
+      <span class="material-symbols-rounded">radar</span>
+      <h2>No topics yet</h2>
+      <p>Create a topic to start collecting public posts and engagement indicators.</p>
+      @if (auth.canManageTopics()) {
+        <a matButton="filled" routerLink="/topics/new">Create your first topic</a>
+      }
+    </div>
+  } @else {
+    <div class="r-grid r-grid--cards">
+      @for (topic of topics(); track topic.id) {
+        <article class="topic-card" [class.topic-card--paused]="!topic.isActive">
+          <header class="topic-card__head">
+            <a class="topic-card__title" [routerLink]="['/topics', topic.id]">{{ topic.name }}</a>
+            @if (auth.canManageTopics()) {
+              <button matIconButton [matMenuTriggerFor]="actions" [attr.aria-label]="'Actions for ' + topic.name" [disabled]="busyTopicId() === topic.id">
+                <span class="material-symbols-rounded">more_vert</span>
+              </button>
+              <mat-menu #actions="matMenu" xPosition="before">
+                <button mat-menu-item (click)="refreshNow(topic)" [disabled]="!topic.isActive">
+                  <span class="material-symbols-rounded menu-icon">refresh</span> Refresh now
+                </button>
+                <a mat-menu-item [routerLink]="['/topics', topic.id, 'edit']">
+                  <span class="material-symbols-rounded menu-icon">edit</span> Edit
+                </a>
+                <button mat-menu-item (click)="toggleActive(topic)">
+                  <span class="material-symbols-rounded menu-icon">{{ topic.isActive ? 'pause_circle' : 'play_circle' }}</span>
+                  {{ topic.isActive ? 'Pause collection' : 'Resume collection' }}
+                </button>
+                <button mat-menu-item class="danger" (click)="confirmDelete(topic)">
+                  <span class="material-symbols-rounded menu-icon">delete</span> Delete
+                </button>
+              </mat-menu>
+            }
+          </header>
+
+          @if (topic.description) {
+            <p class="topic-card__desc">{{ topic.description }}</p>
+          }
+
+          <div class="topic-card__chips">
+            @if (topic.isActive) {
+              <rasid-status-chip [status]="topic.lastRefreshStatus" />
+            } @else {
+              <span class="r-chip"><span class="material-symbols-rounded">pause</span> Paused</span>
+            }
+            <span class="r-chip" [class.r-chip--brand]="topic.priority === 'High'">
+              <span class="material-symbols-rounded">flag</span> {{ topic.priority }} priority
+            </span>
+            @if (topic.isStale) {
+              <span class="r-chip r-chip--warning" matTooltip="The latest scheduled update has not completed yet.">
+                <span class="material-symbols-rounded">history</span> Stale
+              </span>
+            }
+          </div>
+
+          <div class="topic-card__rules">
+            @for (rule of topic.rules; track rule.id) {
+              <span class="rule" [class.rule--excluded]="rule.isExclusion" [attr.title]="rule.isExclusion ? 'Excluded' : rule.type">
+                {{ rule.isExclusion ? '−' : '' }}{{ rule.displayValue }}
+              </span>
+            }
+          </div>
+
+          <footer class="topic-card__foot">
+            <div class="stat">
+              <strong>{{ topic.postCount | compact }}</strong>
+              <span>posts</span>
+            </div>
+            <div class="stat">
+              <strong [title]="topic.lastSuccessfulRefreshUtc | localDateTime">{{ topic.lastSuccessfulRefreshUtc | relativeTime }}</strong>
+              <span>last updated</span>
+            </div>
+            <a class="open" matButton="tonal" [routerLink]="['/topics', topic.id]">
+              Dashboard <span class="material-symbols-rounded btn-icon">arrow_forward</span>
+            </a>
+          </footer>
+        </article>
+      }
+    </div>
+  }
+</div>

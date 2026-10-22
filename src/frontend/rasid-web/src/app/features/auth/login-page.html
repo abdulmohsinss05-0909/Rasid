@@ -1,0 +1,68 @@
+<div class="login">
+  <section class="brand-panel" aria-hidden="true">
+    <rasid-logo [size]="52" />
+    <h1>See the conversation.<br />Measure what matters.</h1>
+    <p>Rasid monitors public posts on X for the topics you define and turns them into clear, explainable engagement indicators.</p>
+    <ul>
+      <li><span class="material-symbols-rounded">verified_user</span> Official X API only. No scraping.</li>
+      <li><span class="material-symbols-rounded">functions</span> Transparent engagement formulas</li>
+      <li><span class="material-symbols-rounded">devices</span> Works on desktop and mobile</li>
+    </ul>
+    <div class="orbit orbit--1"></div>
+    <div class="orbit orbit--2"></div>
+  </section>
+
+  <section class="form-panel">
+    <button class="theme-toggle" matIconButton type="button" (click)="theme.toggle()" [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+      <span class="material-symbols-rounded">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+    </button>
+
+    <div class="card">
+      <rasid-logo class="card__logo" [size]="44" />
+      <h2>Welcome back</h2>
+      <p class="r-muted">Sign in to continue to Rasid.</p>
+
+      @if (expired()) {
+        <p class="notice notice--info" role="status">Your session has expired. Please sign in again.</p>
+      }
+      @if (errorMessage(); as message) {
+        <p class="notice notice--error" role="alert">{{ message }}</p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <span matPrefix class="material-symbols-rounded field-icon">mail</span>
+          <input matInput type="email" formControlName="email" autocomplete="username" required />
+          @if (form.controls.email.hasError('required')) {
+            <mat-error>Email is required.</mat-error>
+          } @else if (form.controls.email.hasError('email')) {
+            <mat-error>Enter a valid email address.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <span matPrefix class="material-symbols-rounded field-icon">lock</span>
+          <input matInput [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" required />
+          <button matSuffix matIconButton type="button" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+            <span class="material-symbols-rounded">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>Password is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <button class="submit" matButton="filled" type="submit" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-progress-spinner diameter="20" mode="indeterminate" />
+          } @else {
+            Sign in
+          }
+        </button>
+      </form>
+
+      <p class="footnote">Protected system. Access is limited to authorised users and is audited.</p>
+    </div>
+  </section>
+</div>

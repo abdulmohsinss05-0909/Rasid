@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.MsSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Integration tests: real Application + Infrastructure against SQL Server in a container. -->
+    <ProjectReference Include="..\..\src\backend\Rasid.Application\Rasid.Application.csproj" />
+    <ProjectReference Include="..\..\src\backend\Rasid.Infrastructure\Rasid.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

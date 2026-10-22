@@ -1,0 +1,112 @@
+<div class="r-page">
+  <header class="hero r-reveal">
+    <div class="hero__text">
+      <p class="hero__eyebrow">Overview · last 7 days</p>
+      <h1>{{ greeting() }}</h1>
+      <p class="hero__sub">Here is how the conversation around your topics is moving.</p>
+    </div>
+    @if (store.overview(); as o) {
+      <div class="hero__status">
+        <rasid-source-badge [source]="o.source" />
+        <span class="hero__updated">
+          <span class="r-dot r-dot--pulse live-dot" aria-hidden="true"></span>
+          Updated <strong [title]="o.lastUpdatedUtc | localDateTime">{{ o.lastUpdatedUtc | relativeTime }}</strong>
+        </span>
+        @if (auth.canManageTopics()) {
+          <a matButton="filled" routerLink="/topics/new"><span class="material-symbols-rounded btn-icon">add</span> New topic</a>
+        }
+      </div>
+    }
+    <div class="hero__orb" aria-hidden="true"></div>
+  </header>
+
+  @if (!store.loaded()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (store.overview(); as o) {
+    <section class="kpis" aria-label="All topics, last 7 days">
+      <rasid-kpi-card class="r-reveal" style="--i: 1" label="Posts" icon="forum" tone="brand" format="integer"
+        [value]="o.totals.posts" [trend]="o.totals.postsChange" period="previous 7 days" [spark]="totalsByDay().posts" />
+      <rasid-kpi-card class="r-reveal" style="--i: 2" label="Interactions" icon="touch_app" [highlight]="true"
+        [value]="o.totals.interactions" [trend]="o.totals.interactionsChange" period="previous 7 days" [spark]="totalsByDay().interactions" />
+      <rasid-kpi-card class="r-reveal" style="--i: 3" label="Views" icon="visibility" tone="violet"
+        [value]="o.totals.views" [trend]="o.totals.viewsChange" period="previous 7 days" />
+      <rasid-kpi-card class="r-reveal" style="--i: 4" label="Engagement rate" icon="speed" tone="green" format="rate"
+        [value]="o.totals.engagementRate" [trend]="o.totals.engagementRatePoints" trendUnit="pts" period="previous 7 days"
+        [hint]="o.totals.activeTopics + ' of ' + o.totals.topics + ' topics active'" />
+    </section>
+
+    <div class="grid">
+      <section class="topics" aria-label="Topics">
+        <h2 class="r-section-title"><span class="material-symbols-rounded">radar</span>Topics</h2>
+        @if (o.topics.length === 0) {
+          <div class="r-card r-state">
+            <span class="material-symbols-rounded">radar</span>
+            <h2>No topics yet</h2>
+            <p>Create a topic to start monitoring.</p>
+          </div>
+        }
+        <div class="topic-grid">
+          @for (t of o.topics; track t.id; let i = $index) {
+            <a class="topic r-card r-lift r-reveal" [style.--i]="i + 4" [routerLink]="['/topics', t.id]" [class.topic--paused]="!t.isActive">
+              <div class="topic__head">
+                <h3>{{ t.name }}</h3>
+                @if (t.isActive) {
+                  <rasid-status-chip [status]="t.status" />
+                } @else {
+                  <span class="r-chip">Paused</span>
+                }
+              </div>
+              <div class="topic__numbers">
+                <div>
+                  <span class="label">Posts</span>
+                  <strong><rasid-animated-number [value]="t.posts" format="integer" /></strong>
+                  <rasid-trend [value]="t.postsChange" period="previous 7 days" />
+                </div>
+                <div>
+                  <span class="label">Interactions</span>
+                  <strong><rasid-animated-number [value]="t.interactions" /></strong>
+                  <rasid-trend [value]="t.interactionsChange" period="previous 7 days" />
+                </div>
+                <div>
+                  <span class="label">Rate</span>
+                  <strong><rasid-animated-number [value]="t.engagementRate" format="rate" /></strong>
+                  <rasid-level-chip [level]="t.engagementLevel" />
+                </div>
+              </div>
+              <rasid-sparkline class="topic__spark" [values]="t.interactionsByDay" [height]="48" />
+              <span class="topic__foot">
+                Updated {{ t.lastSuccessfulRefreshUtc | relativeTime }}
+                <span class="material-symbols-rounded">arrow_forward</span>
+              </span>
+            </a>
+          }
+        </div>
+      </section>
+
+      <aside class="alerts" aria-label="Alerts">
+        <h2 class="r-section-title"><span class="material-symbols-rounded">notifications</span>Alerts</h2>
+        <div class="r-card alerts__card">
+          @for (a of store.alerts(); track a.id; let i = $index) {
+            <a class="alert r-reveal" [style.--i]="i" [class]="'alert r-reveal alert--' + a.severity.toLowerCase()"
+               [routerLink]="a.topicId ? ['/topics', a.topicId] : ['/system']">
+              <span class="alert__icon material-symbols-rounded" aria-hidden="true">{{ alertIcon(a) }}</span>
+              <span class="alert__body">
+                <strong>{{ a.title }}</strong>
+                <span>{{ a.message }}</span>
+                <time [title]="a.occurredUtc | localDateTime">{{ a.occurredUtc | relativeTime }}</time>
+              </span>
+            </a>
+          } @empty {
+            <div class="r-state calm">
+              <span class="material-symbols-rounded">verified</span>
+              <h2>All clear</h2>
+              <p>No spikes, collection problems or budget warnings right now.</p>
+            </div>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+</div>

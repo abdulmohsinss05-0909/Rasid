@@ -1,0 +1,14 @@
+{
+  "name": "Rasid — Topic Monitoring",
+  "short_name": "Rasid",
+  "description": "Monitor public conversation on X by topic, with transparent engagement indicators.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1117",
+  "theme_color": "#0f8f86",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

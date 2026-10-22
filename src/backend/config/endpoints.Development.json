@@ -1,0 +1,19 @@
+{
+  "Endpoints": {
+    "XApi": {
+      "BaseUrl": "https://api.x.com/2/"
+    },
+    "XWeb": {
+      "PostUrlTemplate": "https://x.com/{username}/status/{postId}"
+    },
+    "WebApp": {
+      "BaseUrl": "http://localhost:4200"
+    },
+    "Api": {
+      "BaseUrl": "http://localhost:5080"
+    },
+    "Cors": {
+      "AllowedOrigins": [ "http://localhost:4200" ]
+    }
+  }
+}

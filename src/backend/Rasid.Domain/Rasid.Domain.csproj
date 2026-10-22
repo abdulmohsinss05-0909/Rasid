@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Pure domain model: no package or project dependencies by design. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Rasid.Domain.Tests" />
+  </ItemGroup>
+
+</Project>

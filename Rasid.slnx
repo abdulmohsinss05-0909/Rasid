@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/Rasid.Api/Rasid.Api.csproj" />
+    <Project Path="src/backend/Rasid.Application/Rasid.Application.csproj" />
+    <Project Path="src/backend/Rasid.Domain/Rasid.Domain.csproj" />
+    <Project Path="src/backend/Rasid.Infrastructure/Rasid.Infrastructure.csproj" />
+    <Project Path="src/backend/Rasid.Worker/Rasid.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Rasid.Application.Tests/Rasid.Application.Tests.csproj" />
+    <Project Path="tests/Rasid.Domain.Tests/Rasid.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

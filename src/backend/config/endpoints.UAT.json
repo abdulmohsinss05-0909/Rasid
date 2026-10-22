@@ -1,0 +1,19 @@
+{
+  "Endpoints": {
+    "XApi": {
+      "BaseUrl": "https://api.x.com/2/"
+    },
+    "XWeb": {
+      "PostUrlTemplate": "https://x.com/{username}/status/{postId}"
+    },
+    "WebApp": {
+      "BaseUrl": "https://uat.rasid.example.com"
+    },
+    "Api": {
+      "BaseUrl": "https://uat.rasid.example.com/api"
+    },
+    "Cors": {
+      "AllowedOrigins": [ "https://uat.rasid.example.com" ]
+    }
+  }
+}

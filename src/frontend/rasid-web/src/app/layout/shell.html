@@ -1,0 +1,118 @@
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="shell" [class.shell--handset]="isHandset()">
+  @if (!isHandset()) {
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="sidebar__brand" routerLink="/overview" aria-label="Rasid home">
+        <rasid-logo [size]="38" />
+      </a>
+
+      <nav class="sidebar__nav">
+        @for (item of navItems(); track item.path) {
+          <a class="nav-link" [routerLink]="item.path" routerLinkActive="nav-link--active" ariaCurrentWhenActive="page">
+            <span class="material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
+            {{ item.label }}
+          </a>
+        }
+      </nav>
+
+      <div class="sidebar__foot">
+        @if (status.overview(); as o) {
+          <div class="live-card">
+            <div class="live-card__row">
+              <span class="r-dot r-dot--pulse" aria-hidden="true"></span>
+              <span>Last updated</span>
+            </div>
+            <strong>{{ o.lastUpdatedUtc | relativeTime }}</strong>
+            <rasid-source-badge [source]="o.source" />
+          </div>
+        }
+        <p class="sidebar__tagline">Public conversation on X, measured transparently.</p>
+      </div>
+    </aside>
+  }
+
+  <div class="main-column">
+    <header class="topbar">
+      @if (isHandset()) {
+        <a routerLink="/overview" aria-label="Rasid home"><rasid-logo [size]="32" /></a>
+      }
+
+      <span class="topbar__spacer"></span>
+
+      <button matIconButton type="button" class="bell" [matMenuTriggerFor]="alertsMenu" (menuOpened)="status.markAllSeen()"
+        [matTooltip]="status.alerts().length + ' alert(s)'" [attr.aria-label]="'Alerts, ' + status.unseenCount() + ' new'">
+        <span class="material-symbols-rounded">notifications</span>
+        @if (status.unseenCount() > 0) {
+          <span class="bell__badge" aria-hidden="true">{{ status.unseenCount() }}</span>
+        }
+      </button>
+      <mat-menu #alertsMenu="matMenu" xPosition="before" class="alerts-menu">
+        <div class="alerts-menu__head" role="presentation">Alerts</div>
+        @for (a of status.alerts(); track a.id) {
+          <a mat-menu-item class="alerts-menu__item" [routerLink]="a.topicId ? ['/topics', a.topicId] : ['/system']">
+            <span class="material-symbols-rounded menu-icon" [class]="'material-symbols-rounded menu-icon sev-' + a.severity.toLowerCase()">{{ alertIcon(a) }}</span>
+            <span class="alerts-menu__text"><strong>{{ a.title }}</strong><small>{{ a.message }}</small></span>
+          </a>
+        } @empty {
+          <div class="alerts-menu__empty" role="presentation">
+            <span class="material-symbols-rounded">verified</span> All clear. No alerts right now.
+          </div>
+        }
+        <mat-divider />
+        <a mat-menu-item routerLink="/overview"><span class="material-symbols-rounded menu-icon">space_dashboard</span> Open overview</a>
+      </mat-menu>
+
+      <button
+        matIconButton
+        type="button"
+        (click)="theme.toggle()"
+        [matTooltip]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      >
+        <span class="material-symbols-rounded">{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</span>
+      </button>
+
+      <button class="avatar" type="button" [matMenuTriggerFor]="userMenu" aria-label="Account menu">
+        {{ initials() }}
+      </button>
+
+      <mat-menu #userMenu="matMenu" xPosition="before">
+        <div class="user-card" role="presentation">
+          <strong>{{ auth.user()?.displayName }}</strong>
+          <span>{{ auth.user()?.email }}</span>
+          <span class="user-card__roles">{{ auth.user()?.roles?.join(' · ') }}</span>
+        </div>
+        <mat-divider />
+        <button mat-menu-item (click)="theme.set('light')">
+          <span class="material-symbols-rounded menu-icon">light_mode</span> Light theme
+        </button>
+        <button mat-menu-item (click)="theme.set('dark')">
+          <span class="material-symbols-rounded menu-icon">dark_mode</span> Dark theme
+        </button>
+        <button mat-menu-item (click)="theme.set('system')">
+          <span class="material-symbols-rounded menu-icon">contrast</span> Match device
+        </button>
+        <mat-divider />
+        <button mat-menu-item (click)="auth.signOut()">
+          <span class="material-symbols-rounded menu-icon">logout</span> Sign out
+        </button>
+      </mat-menu>
+    </header>
+
+    <main id="main" class="content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+
+  @if (isHandset()) {
+    <nav class="bottom-nav" aria-label="Main navigation">
+      @for (item of navItems(); track item.path) {
+        <a class="bottom-nav__item" [routerLink]="item.path" routerLinkActive="bottom-nav__item--active" ariaCurrentWhenActive="page">
+          <span class="material-symbols-rounded" aria-hidden="true">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  }
+</div>

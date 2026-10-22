@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/.vs/
+**/.vscode/
+**/TestResults/
+tests/
+docs/
+deploy/docker/.env
+**/*.user

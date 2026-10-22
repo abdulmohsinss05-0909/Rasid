@@ -1,0 +1,54 @@
+// Rasid design tokens. One source for colour, radius, elevation and spacing in both themes.
+// `light-dark()` resolves against the root `color-scheme`, which ThemeService switches.
+
+:root {
+  // Brand: deep teal (trust, monitoring) with a warm gold accent.
+  --r-brand: #0f8f86;
+  --r-brand-strong: #0b6f68;
+  --r-brand-soft: light-dark(#e3f4f2, #0f2a2a);
+  --r-accent: #d9a23b;
+  --r-gradient: linear-gradient(135deg, #0b6f68 0%, #0f8f86 45%, #1aa6b7 100%);
+
+  // Surfaces and text
+  --r-bg: light-dark(#f4f7f8, #0b1117);
+  --r-surface: light-dark(#ffffff, #121a22);
+  --r-surface-2: light-dark(#eef3f5, #17212b);
+  --r-surface-3: light-dark(#e3eaee, #1e2a36);
+  --r-border: light-dark(#dfe7ec, #243341);
+  --r-text: light-dark(#0f1c26, #e7eef4);
+  --r-text-muted: light-dark(#5a6b7a, #93a5b6);
+  --r-text-subtle: light-dark(#8494a3, #6b7e90);
+
+  // Semantic
+  --r-success: light-dark(#0f9d6b, #34d399);
+  --r-success-soft: light-dark(#e3f7ee, #0e2a21);
+  --r-warning: light-dark(#b7791f, #fbbf24);
+  --r-warning-soft: light-dark(#fdf3dd, #2d2412);
+  --r-danger: light-dark(#c53030, #f87171);
+  --r-danger-soft: light-dark(#fde8e8, #2e1515);
+  --r-info: light-dark(#2563eb, #60a5fa);
+  --r-info-soft: light-dark(#e6efff, #13213a);
+
+  // Engagement levels
+  --r-level-high: light-dark(#0f9d6b, #34d399);
+  --r-level-medium: light-dark(#c98a12, #fbbf24);
+  --r-level-low: light-dark(#5b7083, #94a3b8);
+  --r-level-unknown: light-dark(#a0aab4, #4b5a69);
+
+  // Shape and depth
+  --r-radius-sm: 10px;
+  --r-radius: 16px;
+  --r-radius-lg: 22px;
+  --r-shadow: light-dark(0 1px 2px rgb(16 24 40 / 6%), 0 1px 2px rgb(0 0 0 / 40%));
+  --r-shadow-lg: light-dark(0 12px 32px -12px rgb(16 24 40 / 18%), 0 16px 40px -16px rgb(0 0 0 / 60%));
+
+  // Layout
+  --r-sidebar-width: 248px;
+  --r-topbar-height: 64px;
+  --r-bottom-nav-height: 64px;
+  --r-gutter: 16px;
+  --r-content-max: 1400px;
+
+  --r-font: 'Inter', 'Noto Kufi Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --r-font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+}

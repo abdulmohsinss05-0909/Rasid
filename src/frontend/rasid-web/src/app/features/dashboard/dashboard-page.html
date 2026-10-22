@@ -1,0 +1,214 @@
+<div class="r-page">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+    <div class="skeleton">
+      <div class="r-skeleton sk-title"></div>
+      <div class="kpis">
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="r-skeleton sk-kpi"></div>
+        }
+      </div>
+      <div class="r-skeleton sk-chart"></div>
+    </div>
+  } @else if (dashboard(); as d) {
+    <!-- Header -->
+    <header class="head r-reveal">
+      <div class="head__title">
+        <a class="back" routerLink="/topics"><span class="material-symbols-rounded">arrow_back</span> Topics</a>
+        <div class="head__row">
+          <h1>{{ d.topic.name }}</h1>
+          @if (topics().length > 1) {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="switcher">
+              <mat-select [value]="d.topic.id" (selectionChange)="switchTopic($event.value)" aria-label="Switch topic">
+                @for (t of topics(); track t.id) {
+                  <mat-option [value]="t.id">{{ t.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
+        </div>
+        @if (d.topic.description) {
+          <p class="head__desc">{{ d.topic.description }}</p>
+        }
+        <button class="query" type="button" (click)="copyQuery(d.topic.generatedQuery)" matTooltip="Copy the X query">
+          <span class="material-symbols-rounded">terminal</span>
+          <code>{{ d.topic.generatedQuery }}</code>
+          <span class="material-symbols-rounded">content_copy</span>
+        </button>
+      </div>
+      @if (auth.canManageTopics()) {
+        <div class="r-actions">
+          <a matButton="outlined" [routerLink]="['/topics', d.topic.id, 'edit']">
+            <span class="material-symbols-rounded btn-icon">tune</span> Edit topic
+          </a>
+        </div>
+      }
+    </header>
+
+    <rasid-freshness-banner
+      class="r-reveal"
+      style="--i: 1"
+      [freshness]="d.freshness"
+      [canRefresh]="auth.canManageTopics() && d.topic.isActive"
+      [refreshing]="refreshing()"
+      (refresh)="requestRefresh()"
+    />
+
+    <!-- Filters (collapsible on phones) -->
+    <section class="r-card filters r-reveal" style="--i: 2" aria-label="Filters">
+      @if (isHandset()) {
+        <button class="filters__toggle" type="button" (click)="filtersOpen.set(!filtersOpen())" [attr.aria-expanded]="filtersOpen()">
+          <span class="material-symbols-rounded">filter_list</span>
+          Filters
+          @if (activeFilterCount() > 0) {
+            <span class="badge">{{ activeFilterCount() }}</span>
+          }
+          <span class="material-symbols-rounded chevron" [class.chevron--open]="filtersOpen()">expand_more</span>
+        </button>
+      }
+      @if (!isHandset() || filtersOpen()) {
+        <rasid-dashboard-filter-bar [(filter)]="filter" />
+      }
+      <p class="filters__note r-subtle">
+        <span class="material-symbols-rounded">{{ d.filter.usesPreAggregatedData ? 'bolt' : 'manage_search' }}</span>
+        {{ d.filter.usesPreAggregatedData ? 'Served from pre-aggregated hourly data.' : 'Keyword / level filter applied to individual posts.' }}
+        Trends compare with the {{ periodLabel() }}.
+      </p>
+    </section>
+
+    @if (error(); as message) {
+      <p class="inline-error" role="alert"><span class="material-symbols-rounded">error</span> {{ message }} Showing the last loaded data.</p>
+    }
+
+    <!-- KPIs -->
+    <section class="kpis" aria-label="Key indicators">
+      <rasid-kpi-card class="r-reveal" style="--i: 3" label="Total posts" icon="forum" tone="brand"
+        [value]="d.kpis.posts" format="integer" [trend]="d.trends.posts" [period]="periodLabel()" [spark]="spark().posts" />
+      <rasid-kpi-card class="r-reveal" style="--i: 4" [label]="selectedLabel()" icon="touch_app" [highlight]="true"
+        [value]="d.kpis.selectedTypeTotal" [trend]="d.trends.selectedType" [period]="periodLabel()" [spark]="spark().value" />
+      <rasid-kpi-card class="r-reveal" style="--i: 5" label="Likes" icon="favorite" tone="rose"
+        [value]="d.kpis.likes" [trend]="d.trends.likes" [period]="periodLabel()" [spark]="spark().likes" />
+      <rasid-kpi-card class="r-reveal" style="--i: 6" label="Reposts" icon="repeat" tone="green"
+        [value]="d.kpis.reposts" [trend]="d.trends.reposts" [period]="periodLabel()" [spark]="spark().reposts" />
+      <rasid-kpi-card class="r-reveal" style="--i: 7" label="Replies" icon="chat_bubble" tone="blue"
+        [value]="d.kpis.replies" [trend]="d.trends.replies" [period]="periodLabel()" [spark]="spark().replies" />
+      <rasid-kpi-card class="r-reveal" style="--i: 8" label="Views" icon="visibility" tone="violet"
+        [value]="d.kpis.views" [trend]="d.trends.views" [period]="periodLabel()" [spark]="spark().views"
+        [hint]="d.kpis.views === null ? 'Not provided by the source' : null" />
+    </section>
+
+    @if (d.kpis.posts === 0) {
+      <div class="r-card r-state">
+        <span class="material-symbols-rounded">{{ d.freshness.status === 'Pending' ? 'hourglass_top' : 'search_off' }}</span>
+        <h2>{{ d.freshness.status === 'Pending' ? 'Collecting the first posts' : 'No posts for these filters' }}</h2>
+        <p>{{ d.freshness.status === 'Pending' ? 'The first collection is running. This page updates automatically.' : 'Widen the period or clear the keyword and level filters.' }}</p>
+      </div>
+    } @else {
+      <!-- Trend + engagement -->
+      <div class="row row--main">
+        <section class="r-card r-reveal" style="--i: 3">
+          <h2 class="r-card__title">
+            <span class="title"><span class="material-symbols-rounded">monitoring</span>Engagement overview</span>
+            <span class="r-chip">{{ d.filter.granularity === 'Hour' ? 'Hourly' : 'Daily' }} · local time</span>
+          </h2>
+          <rasid-engagement-trend-chart [series]="d.series" [granularity]="d.filter.granularity" />
+        </section>
+
+        <div class="stack">
+          <section class="r-card gauge-card r-reveal" style="--i: 4">
+            <h2 class="r-card__title">
+              <span class="title"><span class="material-symbols-rounded">speed</span>Engagement rate</span>
+              <rasid-trend [value]="d.trends.engagementRatePoints" unit="pts" [period]="periodLabel()" />
+            </h2>
+            <rasid-gauge [rate]="d.kpis.engagementRate" [level]="d.kpis.engagementLevel"
+              [mediumFrom]="d.method.mediumFromPercent" [highAbove]="d.method.highAbovePercent" />
+            <p class="gauge-card__note">
+              {{ coverage() }}
+              <span class="material-symbols-rounded info" tabindex="0" [matTooltip]="d.method.topicRateFormula">info</span>
+            </p>
+          </section>
+          <section class="r-card r-reveal" style="--i: 5">
+            <h2 class="r-card__title"><span class="title"><span class="material-symbols-rounded">donut_large</span>Engagement mix</span></h2>
+            <rasid-breakdown-chart [breakdown]="d.breakdown" />
+          </section>
+        </div>
+      </div>
+
+      <!-- Insights -->
+      @if (insights(); as ins) {
+        @if (ins.highlights.length > 0) {
+          <h2 class="r-section-title"><span class="material-symbols-rounded">auto_awesome</span>Key insights</h2>
+          <rasid-insight-highlights [highlights]="ins.highlights" />
+        }
+
+        <div class="row row--three">
+          <rasid-ranked-list title="Top hashtags" icon="tag" tone="brand" caption="% of posts" [items]="hashtagItems()"
+            emptyText="No hashtags in these posts." />
+          <rasid-ranked-list title="Top accounts" icon="groups" tone="rose" caption="by interactions" [items]="accountItems()" />
+          <rasid-ranked-list title="Rule performance" icon="rule" tone="green" caption="% of posts" [items]="ruleItems()" />
+        </div>
+
+        <div class="row row--main">
+          <section class="r-card">
+            <h2 class="r-card__title">
+              <span class="title"><span class="material-symbols-rounded">calendar_view_week</span>When the conversation happens</span>
+              <span class="r-chip">{{ ins.postsAnalysed }} posts</span>
+            </h2>
+            <rasid-activity-heatmap [heatmap]="ins.heatmap" />
+          </section>
+          <div class="stack">
+            <rasid-ranked-list title="Languages" icon="translate" tone="violet" [items]="languageItems()" />
+            <section class="r-card">
+              <h2 class="r-card__title"><span class="title"><span class="material-symbols-rounded">stacked_bar_chart</span>Engagement levels</span></h2>
+              <rasid-levels-chart [levels]="d.levels" />
+            </section>
+          </div>
+        </div>
+      }
+
+      <!-- Posts -->
+      <div class="row row--main">
+        <rasid-posts-panel
+          [result]="posts()"
+          [sort]="sort()"
+          [loading]="postsLoading()"
+          (sortChange)="sort.set($event)"
+          (pageChange)="page.set($event)"
+        />
+
+        <div class="stack">
+          <section class="r-card">
+            <h2 class="r-card__title"><span class="title"><span class="material-symbols-rounded">trending_up</span>Top posts · {{ selectedLabel().toLowerCase() }}</span></h2>
+            <div class="top-posts">
+              @for (post of d.topPosts; track post.id) {
+                <rasid-post-card [post]="post" />
+              }
+            </div>
+          </section>
+
+          <mat-expansion-panel class="method">
+            <mat-expansion-panel-header>
+              <mat-panel-title><span class="material-symbols-rounded">functions</span> How the numbers are calculated</mat-panel-title>
+            </mat-expansion-panel-header>
+            <ul>
+              <li><code>{{ d.method.interactionsFormula }}</code></li>
+              <li><code>{{ d.method.rateFormula }}</code></li>
+              <li><code>{{ d.method.topicRateFormula }}</code></li>
+              <li>Levels: High &gt; {{ d.method.highAbovePercent }}% · Medium {{ d.method.mediumFromPercent }}–{{ d.method.highAbovePercent }}% · Low &lt; {{ d.method.mediumFromPercent }}%</li>
+              <li>Trends compare each indicator with the {{ periodLabel() }} of equal length. Spikes are periods above the mean + 2 standard deviations.</li>
+            </ul>
+            <p class="r-muted">{{ d.method.notes }}</p>
+            <a routerLink="/about">Full method and compliance statement</a>
+          </mat-expansion-panel>
+        </div>
+      </div>
+    }
+  } @else if (error(); as message) {
+    <div class="r-card r-state">
+      <span class="material-symbols-rounded">cloud_off</span>
+      <h2>The dashboard could not be loaded</h2>
+      <p>{{ message }}</p>
+      <button matButton="outlined" type="button" (click)="reload()">Try again</button>
+    </div>
+  }
+</div>

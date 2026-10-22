@@ -1,0 +1,123 @@
+<div class="r-page">
+  <header class="r-page-header">
+    <div>
+      <a class="back" routerLink="/topics"><span class="material-symbols-rounded">arrow_back</span> Topics</a>
+      <h1>{{ isEdit() ? 'Edit topic' : 'New monitoring topic' }}</h1>
+      <p>Define what to look for. Rasid turns these rules into an X search query.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  } @else {
+    <form class="layout" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="column">
+        <section class="r-card">
+          <h2 class="r-card__title">Details</h2>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Topic name</mat-label>
+            <input matInput formControlName="name" maxlength="100" required />
+            @if (form.controls.name.hasError('required')) {
+              <mat-error>Name is required.</mat-error>
+            } @else if (form.controls.name.getError('server'); as message) {
+              <mat-error>{{ message }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Description (optional)</mat-label>
+            <textarea matInput formControlName="description" rows="2" maxlength="500"></textarea>
+            <mat-hint align="end">{{ form.controls.description.value.length }}/500</mat-hint>
+          </mat-form-field>
+
+          <div class="priority">
+            <span class="priority__label">Priority</span>
+            <mat-button-toggle-group formControlName="priority" aria-label="Priority" hideSingleSelectionIndicator>
+              @for (p of priorities; track p) {
+                <mat-button-toggle [value]="p">{{ p }}</mat-button-toggle>
+              }
+            </mat-button-toggle-group>
+            <span class="r-subtle hint">Higher priority refreshes more often and keeps running when the API budget is tight.</span>
+          </div>
+        </section>
+
+        <section class="r-card">
+          <h2 class="r-card__title">Matching rules</h2>
+          <p class="r-card__subtitle">A post matches when it contains any keyword or hashtag, or is from any listed account.</p>
+
+          @for (group of groups; track group.key) {
+            <mat-form-field appearance="outline" class="rule-field" [class.rule-field--exclude]="group.isExclusion">
+              <mat-label><span class="material-symbols-rounded label-icon">{{ group.icon }}</span>{{ group.label }}</mat-label>
+              <mat-chip-grid #grid [attr.aria-label]="group.label">
+                @for (rule of rulesOf(group); track rule.value) {
+                  <mat-chip-row (removed)="removeRule(rule)">
+                    {{ display(rule) }}
+                    <button matChipRemove [attr.aria-label]="'Remove ' + display(rule)">
+                      <span class="material-symbols-rounded">cancel</span>
+                    </button>
+                  </mat-chip-row>
+                }
+                <input
+                  [placeholder]="group.placeholder"
+                  [matChipInputFor]="grid"
+                  [matChipInputSeparatorKeyCodes]="separatorKeys"
+                  [matChipInputAddOnBlur]="true"
+                  (matChipInputTokenEnd)="addRule(group, $event)"
+                />
+              </mat-chip-grid>
+              <mat-hint>{{ group.hint }}</mat-hint>
+            </mat-form-field>
+            @if (ruleErrors()[group.key]; as message) {
+              <p class="field-error" role="alert">{{ message }}</p>
+            }
+          }
+
+          @if (!hasInclusion() && form.touched) {
+            <p class="field-error" role="alert">Add at least one keyword, hashtag or account.</p>
+          }
+          @for (message of serverRuleErrors(); track $index) {
+            <p class="field-error" role="alert">{{ message }}</p>
+          }
+        </section>
+      </div>
+
+      <aside class="column column--side">
+        <section class="r-card preview">
+          <h2 class="r-card__title">
+            X query preview
+            <span class="r-chip r-chip--brand">Live</span>
+          </h2>
+
+          @if (preview(); as p) {
+            <code class="r-query">{{ p.query }}</code>
+            <div class="usage" [class.usage--over]="!p.isWithinLimit">
+              <div class="usage__bar"><span [style.width.%]="previewUsage()"></span></div>
+              <span>{{ p.length }} / {{ p.maxLength }} characters</span>
+            </div>
+            @if (!p.isWithinLimit) {
+              <p class="field-error">The query exceeds the X plan limit. Remove rules or split the topic.</p>
+            }
+          } @else if (previewError(); as message) {
+            <p class="field-error">{{ message }}</p>
+          } @else {
+            <p class="r-muted">Add a keyword, hashtag or account to see the query.</p>
+          }
+
+          <ul class="facts">
+            <li><span class="material-symbols-rounded">block</span> Reposts are excluded to avoid double counting.</li>
+            <li><span class="material-symbols-rounded">schedule</span> X Recent Search covers the last 7 days.</li>
+            <li><span class="material-symbols-rounded">verified_user</span> Collected only through the official X API.</li>
+          </ul>
+        </section>
+
+        <div class="actions">
+          <a matButton routerLink="/topics">Cancel</a>
+          <button matButton="filled" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : isEdit() ? 'Save changes' : 'Create topic' }}
+          </button>
+        </div>
+      </aside>
+    </form>
+  }
+</div>
